@@ -6,6 +6,7 @@
 //
 import SwiftUI
 
+// passes a list of [Post] that fit the condition (public/private posts) 
 func getPosts(publicPost: Bool, completion: @escaping ([Post]) -> Void){
     // construct URL with query params
     var components = URLComponents(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/questions")
