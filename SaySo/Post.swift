@@ -5,6 +5,8 @@
 //  Created by Jenny Choi on 5/18/25.
 //
 import Foundation
+import SwiftUI
+
 
 struct Post: Codable, Identifiable {
     var id: String
@@ -23,4 +25,6 @@ struct Post: Codable, Identifiable {
         self.publicPost = publicPost
     }
 }
+
+
 
