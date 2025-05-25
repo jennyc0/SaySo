@@ -39,10 +39,6 @@ struct ExploreView: View {
                     Text("Explore").tag(FeedType.explore)
                     Text("Friends").tag(FeedType.friends)
                 }
-                .pickerStyle(.segmented)
-                    
-                    
-                
                     .pickerStyle(SegmentedPickerStyle())
                 Text("\(selectedFeed)")
                     .padding(.horizontal)
