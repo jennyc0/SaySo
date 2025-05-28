@@ -1,0 +1,13 @@
+{
+  "stackName": "amplify-sayso-dev-0b831",
+  "props": {
+    "templateFile": "root-stack-template.json",
+    "parameters": {
+      "AuthRoleName": "amplify-sayso-dev-0b831-authRole",
+      "UnauthRoleName": "amplify-sayso-dev-0b831-unauthRole",
+      "DeploymentBucketName": "amplify-sayso-dev-0b831-deployment"
+    },
+    "preserveLogicalIds": true,
+    "loadNestedStacks": {}
+  }
+}

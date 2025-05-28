@@ -9,15 +9,17 @@ import Foundation
 
 struct User: Codable, Identifiable {
     var id: String
-    var username: String
-    var friends: Set<String> // store userIds
+    var email: String
+    private var friends: Set<String> // store user ids
     
-    init(username: String, friends: Set<String> = []) {
+    init(email: String) {
         self.id = UUID().uuidString
-        self.username = username
-        self.friends = friends
+        self.email = email
+        self.friends = []
     }
     
-    // add friend
-    
+    // function to add friend
+    mutating func addFriend(friendID: String) {
+        self.friends.insert(friendID)
+    }
 }

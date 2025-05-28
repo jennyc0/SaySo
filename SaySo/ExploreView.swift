@@ -101,15 +101,19 @@ struct ExploreView: View {
             return
         }
         isLoading = true
-        getPosts(publicPost: true) { fetchedPublicPost in
-            getPosts(publicPost: false) { fetchedFriendsPost in
-                DispatchQueue.main.async {
-                    self.publicPosts = fetchedPublicPost
-                    self.friendsPosts = fetchedFriendsPost
-                    self.isLoading = false
-                }
-            }
+        
+        do {
+            let fetchedPublicPosts = try await APIService.getPosts(publicPost: true)
+            let fetchedFriendsPosts = try await APIService.getPosts(publicPost: false)
+            
+            self.publicPosts = fetchedPublicPosts
+            self.friendsPosts = fetchedFriendsPosts
+            self.isLoading = false
+            
+        } catch {
+            print("Failed to load posts: \(error)")
         }
+        
     }
 }
 
