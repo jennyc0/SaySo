@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct SignUpView: View {
-    @State private var email = ""
-    @State private var password = ""
+    @State var email = ""
+    @State var password = ""
     var body: some View {
         VStack {
             TextField("Email", text: $email)
@@ -18,14 +18,9 @@ struct SignUpView: View {
             TextField("Password", text: $password)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
-            Button("Create Account") {
-                
-                
-            }
-
-            
+            Button("Sign up", action: {})
+            Button("Already have an account? Log in.", action: {})
         }
-        
     }
 }
 
