@@ -14,6 +14,11 @@ struct SaySoApp: App {
     init() {
         configureAmplify()
     }
+    var body: some Scene {
+        WindowGroup {
+            AuthRouterView()
+        }
+    }
     
     private func configureAmplify() {
         do {
@@ -23,13 +28,6 @@ struct SaySoApp: App {
             
         } catch {
             print("Could not initialize Amplify, error: \(error)")
-        }
-    }
-    var body: some Scene {
-        WindowGroup {
-            ContentView()
-            Text("app")
-            
         }
     }
 }
