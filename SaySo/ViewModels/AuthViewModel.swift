@@ -14,18 +14,13 @@ import Amplify
 enum AuthState {
     case signUp
     case login
-    case confirmCode
+    case confirmCode(email: String)
     case loggedIn
 }
 
 final class AuthViewModel: ObservableObject {
     @Published var authState: AuthState = .signUp
-    
-    @Published var isSignedIn = false
-    @Published var email = ""
-    @Published var password = ""
-    @Published var confirmationCode = ""
-    @Published var currentUser: AuthUser? = nil
+    @Published var currentUser: User? = nil
     
     init() {
         Task {
@@ -33,6 +28,7 @@ final class AuthViewModel: ObservableObject {
         }
     }
     
+    //check if user is signed in. if not direct to sign in page
     func fetchAuthSession() async {
         do {
             let session = try await Amplify.Auth.fetchAuthSession()
@@ -42,17 +38,17 @@ final class AuthViewModel: ObservableObject {
                 }
                 let user = try await Amplify.Auth.getCurrentUser()
                 
-                DispatchQueue.main.async {
-                    self.email = user.username
+                do {
+                    let attributes = try await Amplify.Auth.fetchUserAttributes()
+                    let email = attributes.first(where: { $0.key.rawValue == "email" })?.value ?? ""
+                    
+                    self.currentUser = User(email: email) // wrap in DispatchQueue.main.async?
                 }
-
-                
             } else {
                 DispatchQueue.main.async {
                     self.authState = .login
                 }
             }
-        
         } catch {
             print("Failed to fetch session: \(error)")
         }
@@ -65,8 +61,7 @@ final class AuthViewModel: ObservableObject {
             if case let .confirmUser(deliveryDetails, _, userId) = nextStep {
                 print("Delivery details \(String(describing: deliveryDetails)) for userId: \(String(describing: userId))")
                 DispatchQueue.main.async {
-                    self.email = email
-                    self.authState = .confirmCode
+                    self.authState = .confirmCode(email: email)
                 }
             } else {
                 print("SignUp Complete")
@@ -80,6 +75,11 @@ final class AuthViewModel: ObservableObject {
     
     // username is email
     func confirmSignUp(confirmationCode: String) async {
+        guard case let .confirmCode(email) = authState else {
+            print("not in confirm code state")
+            return
+        }
+         
         do {
             let result = try await AuthService.shared.confirmSignUp(for: email, with: confirmationCode)
             if result.isSignUpComplete {
@@ -107,24 +107,21 @@ final class AuthViewModel: ObservableObject {
                 print("Sign in succeeded")
                 
                 DispatchQueue.main.async {
-                    self.isSignedIn = true
+                    
                     self.authState = .loggedIn
                 }
-
             }
         } catch let error as AuthError {
             print("Sign in failed \(error)")
         } catch {
             print("Unexpected error: \(error)")
         }
-        
-        
-            }
+    }
     
     
     func signOut() {
-        // write AuthService function for sign out
-        isSignedIn = false
+        // TODO write AuthService function for sign out
+        self.authState = .login
         
     }
 }

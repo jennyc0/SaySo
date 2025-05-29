@@ -3,7 +3,8 @@
 //  SaySo
 //
 //  Created by Jenny Choi on 5/19/25.
-//  Where all public posts will be displayed
+
+//  Where all posts will be displayed
 
 import SwiftUI
 
