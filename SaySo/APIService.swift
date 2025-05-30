@@ -14,6 +14,9 @@ enum APIError: Error {
     case invalidResponse
 }
 struct APIService {
+    // one instance of APIService shared throughout the app
+    static let shared = APIService()
+    private init() {}
     
     static func createQuestion(postVisibility: String, questionText: String) async throws -> Bool {
         let publicPost = (postVisibility == "public")

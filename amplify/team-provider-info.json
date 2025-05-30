@@ -15,6 +15,15 @@
       "auth": {
         "SaySoAuth": {},
         "SaySo": {}
+      },
+      "function": {
+        "createUser": {
+          "deploymentBucketName": "amplify-sayso-dev-0b831-deployment",
+          "s3Key": "amplify-builds/createUser-784f734d62426473644d-build.zip"
+        }
+      },
+      "storage": {
+        "users": {}
       }
     }
   }

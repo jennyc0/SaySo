@@ -12,8 +12,6 @@ enum Tab {
     case profile
     case createPost
     case explore
-    
-    
 }
 final class AppViewModel: ObservableObject {
     @Published var currTab: Tab = .explore

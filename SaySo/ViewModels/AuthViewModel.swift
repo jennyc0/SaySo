@@ -8,8 +8,6 @@
 import Foundation
 import Amplify
 
-
-
 // different log-in states you can be in
 enum AuthState {
     case signUp
@@ -36,13 +34,14 @@ final class AuthViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self.authState = .loggedIn
                 }
-                let user = try await Amplify.Auth.getCurrentUser()
+                //let user = try await Amplify.Auth.getCurrentUser()
                 
                 do {
                     let attributes = try await Amplify.Auth.fetchUserAttributes()
                     let email = attributes.first(where: { $0.key.rawValue == "email" })?.value ?? ""
-                    
-                    self.currentUser = User(email: email) // wrap in DispatchQueue.main.async?
+                    DispatchQueue.main.async {
+                        self.currentUser = User(email: email) 
+                    }
                 }
             } else {
                 DispatchQueue.main.async {
@@ -121,7 +120,7 @@ final class AuthViewModel: ObservableObject {
     
     func signOut() {
         // TODO write AuthService function for sign out
-        self.authState = .login
+        
         
     }
 }

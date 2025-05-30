@@ -21,10 +21,7 @@ struct AuthRouterView: View {
             case .confirmCode:
                 ConfirmationView()
             case .loggedIn:
-                NavigationStack {
-                    ExploreView()
-                }
-                
+                MainAppRouterView()
             }
             
         }

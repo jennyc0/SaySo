@@ -10,7 +10,7 @@ import Foundation
 struct User: Codable, Identifiable {
     var id: String
     var email: String
-    private var friends: Set<String> // store user ids
+    private var friends: Array<String> // store user ids
     
     init(email: String) {
         self.id = UUID().uuidString
@@ -20,6 +20,6 @@ struct User: Codable, Identifiable {
     
     // function to add friend
     mutating func addFriend(friendID: String) {
-        self.friends.insert(friendID)
+        self.friends.append(friendID)
     }
 }
