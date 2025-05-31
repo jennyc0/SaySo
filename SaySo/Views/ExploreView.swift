@@ -107,8 +107,8 @@ struct ExploreView: View {
         isLoading = true
         
         do {
-            let fetchedPublicPosts = try await APIService.getPosts(publicPost: true)
-            let fetchedFriendsPosts = try await APIService.getPosts(publicPost: false)
+            let fetchedPublicPosts = try await APIService.shared.getPosts(publicPost: true)
+            let fetchedFriendsPosts = try await APIService.shared.getPosts(publicPost: false)
             
             self.publicPosts = fetchedPublicPosts
             self.friendsPosts = fetchedFriendsPosts

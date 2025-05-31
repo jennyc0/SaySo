@@ -10,6 +10,7 @@ import SwiftUI
 struct CreatePostView: View {
    // @EnvironmentObject var authViewModel: AuthViewModel 
     @EnvironmentObject var appViewModel: AppViewModel
+    
     @State private var questionText = ""
     @State private var newQ = false
     
@@ -26,7 +27,7 @@ struct CreatePostView: View {
                 Button("Ask the World") {
                     Task {
                         do {
-                            let success = try await APIService.createQuestion(postVisibility: "public", questionText: questionText)
+                            let success = try await APIService.shared.createQuestion(postVisibility: "public", questionText: questionText)
                             if success {
                                 // reset frontend variables
                                 newQ = true
@@ -41,7 +42,7 @@ struct CreatePostView: View {
                 Button("Ask Friends") {
                     Task {
                         do {
-                            let success = try await APIService.createQuestion(postVisibility: "private", questionText: questionText)
+                            let success = try await APIService.shared.createQuestion(postVisibility: "private", questionText: questionText)
                             if success {
                                 // reset frontend variables
                                 newQ = true

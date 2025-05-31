@@ -12,7 +12,7 @@ enum Field: Hashable {
 }
 
 struct SignUpView: View {
-    
+    @EnvironmentObject var appViewModel: AppViewModel
     @EnvironmentObject var authViewModel: AuthViewModel
     
     @State var emailErrorMessage: String?
@@ -51,11 +51,15 @@ struct SignUpView: View {
                 .focused($focusedField, equals: .username)
                 .onChange(of: focusedField) { oldState, newState in
                     if oldState == .username && newState != .username && username != "" {
-                        // check if username is unique
-                        if !isValidUsername(username) {
-                            
+                        // clicked out of box after typing, check if username is unique
+                        Task {
+                            let valid = await isValidUsername(username)
+                            if !valid {
+                                usernameErrorMessage = "Username already taken"
+                            }
                         }
-                        
+                    } else if newState == .username {
+                        usernameErrorMessage = nil
                     }
                 }
                 .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -87,20 +91,31 @@ struct SignUpView: View {
             }
             Button("Sign up") {
                 Task {
-                    if isValidEmail(email) && isValidPassword(password) && isValidUsername(username) {
+                    let valid = await isValidUsername(username)
+                    if isValidEmail(email) && isValidPassword(password) && valid {
                         // pass in username too
-                        await authViewModel.signUp(email: email, password: password)
+                        await authViewModel.signUp(email: email, password: password, username: username)
                     }
                 }
             }
             Button("Already have an account? Log in.", action: {authViewModel.authState = .login})
         }
     }
+    
+    // make api call to check if username exists in database
+    func isValidUsername(_ username: String) async -> Bool {
+        do {
+            let exists = try await appViewModel.usernameTaken(username)
+            return !exists
+        } catch {
+            print("checking username existance error: \(error)")
+            return false
+        }
+        
+    }
 }
 
-func isValidUsername(_ username: String) -> Bool {
-    return true
-}
+
 
 // returns true if valid email
 func isValidEmail(_ email: String) -> Bool{
@@ -116,4 +131,5 @@ func isValidPassword(_ password: String) -> Bool {
 }
 #Preview {
     SignUpView()
+        .environmentObject(AppViewModel())
 }

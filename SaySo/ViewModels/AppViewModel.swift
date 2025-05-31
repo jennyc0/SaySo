@@ -19,4 +19,8 @@ final class AppViewModel: ObservableObject {
     init() {
         
     }
+    func usernameTaken(_ username: String) async throws -> Bool {
+        let exists = try await APIService.shared.usernameExists(username)
+        return exists
+    }
 }

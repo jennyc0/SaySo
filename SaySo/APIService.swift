@@ -18,7 +18,27 @@ struct APIService {
     static let shared = APIService()
     private init() {}
     
-    static func createQuestion(postVisibility: String, questionText: String) async throws -> Bool {
+    func usernameExists(_ username: String) async throws -> Bool {
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users?username=\(username)") else {
+            throw APIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        
+        let (data, _) = try await URLSession.shared.data(for: request) // send request
+        
+        do {
+            let dataDict = try JSONDecoder().decode([String: Bool].self, from: data)
+            
+            return dataDict["exists"] ?? false
+        } catch {
+            throw APIError.decodingFailed
+        }
+ 
+    }
+    
+    func createQuestion(postVisibility: String, questionText: String) async throws -> Bool {
         let publicPost = (postVisibility == "public")
 
         // target url to send the request to
@@ -49,7 +69,7 @@ struct APIService {
     }
     
     // passes a list of [Post] that fit the condition (public/private posts)
-    static func getPosts(publicPost: Bool) async throws -> [Post] {
+    func getPosts(publicPost: Bool) async throws -> [Post] {
         guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/questions") else {
             throw APIError.invalidURL
         }

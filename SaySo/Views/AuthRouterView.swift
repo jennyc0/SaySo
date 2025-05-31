@@ -10,6 +10,7 @@ import SwiftUI
 struct AuthRouterView: View {
     
     @StateObject var authViewModel = AuthViewModel()
+    @StateObject var appViewModel = AppViewModel() // used in SignUpView 
     
     var body: some View {
         Group {
@@ -26,6 +27,7 @@ struct AuthRouterView: View {
             
         }
         .environmentObject(authViewModel)
+        .environmentObject(appViewModel)
     }
 }
 

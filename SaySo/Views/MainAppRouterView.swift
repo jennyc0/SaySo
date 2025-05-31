@@ -8,16 +8,14 @@
 import SwiftUI
 
 struct MainAppRouterView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel // get from AuthRouterView
-
-    @StateObject var appViewModel = AppViewModel()
-    init() {
-        print("currTab =", AppViewModel().currTab)
-    }
+    
+    // get from AuthRouterView
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var appViewModel: AppViewModel
+    
     var body: some View {
         
         TabView(selection: $appViewModel.currTab){
-            
             ExploreView()
                 .tabItem {Image(systemName: "globe.americas")}
                 .tag(Tab.explore)
@@ -39,5 +37,6 @@ struct MainAppRouterView: View {
 #Preview {
     MainAppRouterView()
         .environmentObject(AuthViewModel())
+        .environmentObject(AppViewModel())
 
 }

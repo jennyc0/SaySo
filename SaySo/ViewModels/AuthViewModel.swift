@@ -54,9 +54,9 @@ final class AuthViewModel: ObservableObject {
     }
     
      
-    func signUp(email: String, password: String) async {
+    func signUp(email: String, password: String, username: String) async {
         do {
-            let nextStep = try await AuthService.shared.signUp(email: email, password: password)
+            let nextStep = try await AuthService.shared.signUp(email: email, password: password, username: username)
             if case let .confirmUser(deliveryDetails, _, userId) = nextStep {
                 print("Delivery details \(String(describing: deliveryDetails)) for userId: \(String(describing: userId))")
                 DispatchQueue.main.async {

@@ -19,7 +19,7 @@
       "function": {
         "createUser": {
           "deploymentBucketName": "amplify-sayso-dev-0b831-deployment",
-          "s3Key": "amplify-builds/createUser-784f734d62426473644d-build.zip"
+          "s3Key": "amplify-builds/createUser-45576f30384f68554e67-build.zip"
         }
       },
       "storage": {
