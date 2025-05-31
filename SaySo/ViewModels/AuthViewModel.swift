@@ -37,10 +37,14 @@ final class AuthViewModel: ObservableObject {
                     self.authState = .loggedIn
                 }
                 do {
-                    let attributes = try await Amplify.Auth.fetchUserAttributes()
+                    let attributes = try await Amplify.Auth.fetchUserAttributes() // returns a [AuthUserAttributes(key: __, value: __)]
+                    
                     let email = attributes.first(where: { $0.key.rawValue == "email" })?.value ?? ""
+                    let username = attributes.first(where: {$0.key.rawValue == "custom:username"})?.value ?? ""
+                    let userId = attributes.first(where:{ $0.key.rawValue == "sub"})?.value ?? ""
                     DispatchQueue.main.async {
-                        self.currentUser = User(email: email) 
+                        self.currentUser = User(email: email, username: username, userId: userId)
+                        print("current user:\(self.currentUser?.id ?? "") ")
                     }
                 }
             } else {

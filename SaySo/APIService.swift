@@ -38,7 +38,7 @@ struct APIService {
  
     }
     
-    func createQuestion(postVisibility: String, questionText: String) async throws -> Bool {
+    func createQuestion(userId: String, postVisibility: String, questionText: String) async throws -> Bool {
         let publicPost = (postVisibility == "public")
 
         // target url to send the request to
@@ -46,7 +46,7 @@ struct APIService {
             throw APIError.invalidURL
         }
         
-        let post = Post(text: questionText, publicPost: publicPost)
+        let post = Post(userId: userId, text: questionText, publicPost: publicPost)
         guard let body = try? JSONEncoder().encode(post) else {
             throw APIError.encodingFailed
         }

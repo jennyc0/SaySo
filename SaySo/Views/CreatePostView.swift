@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct CreatePostView: View {
-   // @EnvironmentObject var authViewModel: AuthViewModel 
+    @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var appViewModel: AppViewModel
     
     @State private var questionText = ""
@@ -27,12 +27,18 @@ struct CreatePostView: View {
                 Button("Ask the World") {
                     Task {
                         do {
-                            let success = try await APIService.shared.createQuestion(postVisibility: "public", questionText: questionText)
-                            if success {
-                                // reset frontend variables
-                                newQ = true
-                                questionText = ""
+                            if let userId = authViewModel.currentUser?.id {
+                                let success = try await APIService.shared.createQuestion(userId: userId, postVisibility: "public", questionText: questionText)
+                                if success {
+                                    // reset frontend variables
+                                    newQ = true
+                                    questionText = ""
+                                }
+                            } else {
+                                print("No current user")
                             }
+                            
+                            
                         } catch {
                             print("Error: ", error)
                             
@@ -42,11 +48,15 @@ struct CreatePostView: View {
                 Button("Ask Friends") {
                     Task {
                         do {
-                            let success = try await APIService.shared.createQuestion(postVisibility: "private", questionText: questionText)
-                            if success {
-                                // reset frontend variables
-                                newQ = true
-                                questionText = ""
+                            if let userId = authViewModel.currentUser?.id {
+                                let success = try await APIService.shared.createQuestion(userId: userId, postVisibility: "private", questionText: questionText)
+                                if success {
+                                    // reset frontend variables
+                                    newQ = true
+                                    questionText = ""
+                                }
+                            } else {
+                                print("No current user")
                             }
                         } catch {
                             print("Error: ", error)
@@ -71,4 +81,6 @@ struct CreatePostView: View {
 
 #Preview {
     CreatePostView()
+        .environmentObject(AuthViewModel())
+        .environmentObject(AppViewModel())
 }

@@ -4,13 +4,11 @@
 //
 //  Created by Jenny Choi on 5/19/25.
 
-//  Where all posts will be displayed
+//  Where all public posts will be displayed
 
 import SwiftUI
 
 let DEV_MODE = false
-
-
 
 struct ExploreView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -90,9 +88,9 @@ struct ExploreView: View {
         if DEV_MODE {
             print("⚠️ Skipping network call (dev mode)")
             let posts = [  // sample post for layout/testing
-                Post(text: "This is a sample post that will take up the whole horizontal space and span multiple lines as needed to demonstrate the layout ", publicPost: true),
-                Post(text: "Another placeholder post", publicPost: true),
-                Post(text: "first private post! technically a friends only post", publicPost: false),
+                Post(userId: "Jenny-dev", text: "This is a sample post that will take up the whole horizontal space and span multiple lines as needed to demonstrate the layout ", publicPost: true),
+                Post(userId: "Jenny-dev", text: "Another placeholder post", publicPost: true),
+                Post(userId: "Jenny-dev", text: "first private post! technically a friends only post", publicPost: false),
                                 
             ]
             self.publicPosts = posts.filter {

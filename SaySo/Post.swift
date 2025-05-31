@@ -13,14 +13,16 @@ struct Post: Codable, Identifiable {
     var votedNo : Int
     var createdAt: String
     var publicPost: Bool
+    var userId: String
     
-    init(text: String, publicPost: Bool) {
+    init(userId: String, text: String, publicPost: Bool) {
         self.id = UUID().uuidString
         self.text = text
         self.votedYes = 0
         self.votedNo = 0
         self.createdAt = Date().formatted(date: .numeric, time: .complete)
         self.publicPost = publicPost
+        self.userId = userId
     }
 }
 
