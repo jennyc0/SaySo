@@ -6,17 +6,15 @@
 //
 
 import SwiftUI
-/*
- enum Tab {
-     case profile
-     case createPost
-     case explore
- }
- */
 
 struct MainAppRouterView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel // get from AuthRouterView
+    //@StateObject var authViewModel = AuthViewModel()
+
     @StateObject var appViewModel = AppViewModel()
-    
+    init() {
+        print("currTab =", AppViewModel().currTab)
+    }
     var body: some View {
         
         TabView(selection: $appViewModel.currTab){
@@ -30,13 +28,17 @@ struct MainAppRouterView: View {
             ProfileView()
                 .tabItem {Image(systemName: "person")}
                 .tag(Tab.profile)
+                .onAppear{print("Rendering mainAppRouterView")}
             
         }
         .environmentObject(appViewModel)
+        .environmentObject(authViewModel)
     }
     
 }
 
 #Preview {
     MainAppRouterView()
+        .environmentObject(AuthViewModel())
+
 }

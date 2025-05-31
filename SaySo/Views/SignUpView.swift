@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SignUpView: View {
-    @EnvironmentObject var viewModel: AuthViewModel
+    @EnvironmentObject var authViewModel: AuthViewModel
     @State var errorMessage: String?
     
     @State var email = ""
@@ -42,12 +42,12 @@ struct SignUpView: View {
                     errorMessage = "Password must be at least eight characters with at least one uppercase letter, one lowercase letter, one number and one special character"
                 } else {
                     Task {
-                        await viewModel.signUp(email: email, password: password)
+                        await authViewModel.signUp(email: email, password: password)
                     }
                 }
                 
             }
-            Button("Already have an account? Log in.", action: {viewModel.authState = .login})
+            Button("Already have an account? Log in.", action: {authViewModel.authState = .login})
         }
     }
 }

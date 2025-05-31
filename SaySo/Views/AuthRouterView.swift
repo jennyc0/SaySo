@@ -9,11 +9,11 @@ import SwiftUI
 
 struct AuthRouterView: View {
     
-    @StateObject var viewModel = AuthViewModel()
+    @StateObject var authViewModel = AuthViewModel()
     
     var body: some View {
         Group {
-            switch viewModel.authState {
+            switch authViewModel.authState {
             case .login:
                 LoginView()
             case .signUp:
@@ -25,7 +25,7 @@ struct AuthRouterView: View {
             }
             
         }
-        .environmentObject(viewModel)
+        .environmentObject(authViewModel)
     }
 }
 

@@ -13,6 +13,7 @@ let DEV_MODE = false
 
 
 struct ExploreView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var appViewModel: AppViewModel
 
     enum FeedType: String, CaseIterable {

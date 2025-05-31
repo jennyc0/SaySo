@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LoginView: View {
-    @EnvironmentObject var viewModel: AuthViewModel
+    @EnvironmentObject var authViewModel: AuthViewModel
     
     @State private var email = ""
     @State private var password = ""
@@ -27,10 +27,10 @@ struct LoginView: View {
             
             Button("Login") {
                 Task {
-                    await viewModel.signIn(username: email, password: password)
+                    await authViewModel.signIn(username: email, password: password)
                 }
             }
-            Button("Don't have an account? Sign up.", action: {viewModel.authState = .signUp})
+            Button("Don't have an account? Sign up.", action: {authViewModel.authState = .signUp})
             Spacer()
         }
         .padding()

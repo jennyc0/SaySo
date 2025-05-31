@@ -32,7 +32,6 @@ final class AuthService {
             password: password,
             options: options
         )
-        
         return result.nextStep
     }
     
@@ -43,6 +42,10 @@ final class AuthService {
             confirmationCode: confirmationCode
         )
         return confirmSignUpResult
-           
+    }
+    
+    func signOut() async -> AuthSignOutResult {
+        let result = await Amplify.Auth.signOut()
+        return result
     }
 }

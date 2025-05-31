@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CreatePostView: View {
+   // @EnvironmentObject var authViewModel: AuthViewModel 
     @EnvironmentObject var appViewModel: AppViewModel
     @State private var questionText = ""
     @State private var newQ = false

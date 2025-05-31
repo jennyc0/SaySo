@@ -8,7 +8,7 @@
 import Foundation
 
 
-enum Tab {
+enum Tab: Hashable {
     case profile
     case createPost
     case explore

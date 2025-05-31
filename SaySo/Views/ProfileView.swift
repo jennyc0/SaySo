@@ -8,13 +8,23 @@
 import SwiftUI
 
 struct ProfileView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var appViewModel: AppViewModel
     
     var body: some View {
-        Text("My Profile")
+        VStack {
+            Text("My Profile")
+            Button("Sign out") {
+                Task {
+                    await authViewModel.signOut()
+                }
+            }
+        }
+        
     }
 }
 
 #Preview {
     ProfileView()
+        .environmentObject(AuthViewModel())
 }

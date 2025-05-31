@@ -7,6 +7,8 @@
 
 import Foundation
 import Amplify
+import AWSCognitoAuthPlugin
+
 
 // different log-in states you can be in
 enum AuthState {
@@ -34,8 +36,6 @@ final class AuthViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self.authState = .loggedIn
                 }
-                //let user = try await Amplify.Auth.getCurrentUser()
-                
                 do {
                     let attributes = try await Amplify.Auth.fetchUserAttributes()
                     let email = attributes.first(where: { $0.key.rawValue == "email" })?.value ?? ""
@@ -106,7 +106,6 @@ final class AuthViewModel: ObservableObject {
                 print("Sign in succeeded")
                 
                 DispatchQueue.main.async {
-                    
                     self.authState = .loggedIn
                 }
             }
@@ -118,9 +117,36 @@ final class AuthViewModel: ObservableObject {
     }
     
     
-    func signOut() {
-        // TODO write AuthService function for sign out
-        
-        
+    func signOut() async {
+        let result = await AuthService.shared.signOut()
+        guard let signOutResult = result as? AWSCognitoSignOutResult
+        else {
+            print("sign out failed")
+            return
+        }
+        switch signOutResult {
+        case .complete:
+            print("successful sign out")
+            DispatchQueue.main.async{
+                self.authState = .login
+            }
+            
+        case let .partial(revokeTokenError, globalSignOutError, hostedUIError):
+            // Sign Out completed with some errors. User is signed out of the device.
+            if let hostedUIError = hostedUIError {
+                print("HostedUI error  \(String(describing: hostedUIError))")
+            }
+            if let globalSignOutError = globalSignOutError {
+                // Optional: Use escape hatch to retry revocation of globalSignOutError.accessToken.
+                print("GlobalSignOut error  \(String(describing: globalSignOutError))")
+            }
+            if let revokeTokenError = revokeTokenError {
+                // Optional: Use escape hatch to retry revocation of revokeTokenError.accessToken.
+                print("Revoke token error  \(String(describing: revokeTokenError))")
+            }
+        case .failed(let error):
+            // Sign Out failed with an exception, leaving the user signed in.
+            print("SignOut failed with \(error)")
+        }
     }
 }

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ConfirmationView: View {
-    @EnvironmentObject var viewModel: AuthViewModel
+    @EnvironmentObject var authViewModel: AuthViewModel
 
     @State var confirmationCode = ""
     var body: some View {
@@ -18,7 +18,7 @@ struct ConfirmationView: View {
                 .border(Color.gray)
             Button("Confirm") {
                 Task {
-                    await viewModel.confirmSignUp(confirmationCode: confirmationCode)
+                    await authViewModel.confirmSignUp(confirmationCode: confirmationCode)
                 }
             }
             .buttonStyle(.borderedProminent)
