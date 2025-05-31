@@ -45,7 +45,6 @@ final class AuthService {
     }
     
     func signOut() async -> AuthSignOutResult {
-        let result = await Amplify.Auth.signOut()
-        return result
+        return await Amplify.Auth.signOut()
     }
 }

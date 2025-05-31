@@ -99,21 +99,22 @@ final class AuthViewModel: ObservableObject {
     }
     
     //username is email
-    func signIn(username: String, password: String) async {
+    func signIn(username: String, password: String) async -> String? {
         do {
             let result = try await AuthService.shared.signIn(username: username, password: password)
             if result.isSignedIn {
                 print("Sign in succeeded")
-                
                 DispatchQueue.main.async {
                     self.authState = .loggedIn
                 }
             }
         } catch let error as AuthError {
             print("Sign in failed \(error)")
+            return "Incorrect username or password"
         } catch {
             print("Unexpected error: \(error)")
         }
+        return nil
     }
     
     

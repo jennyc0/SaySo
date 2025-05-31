@@ -10,6 +10,8 @@ import SwiftUI
 struct LoginView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     
+    @State private var signInErrorMessage: String?
+    
     @State private var email = ""
     @State private var password = ""
     
@@ -24,10 +26,17 @@ struct LoginView: View {
             SecureField("Password", text: $password)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding()
-            
+            if let error = signInErrorMessage {
+                Text(error)
+                    .foregroundColor(.red)
+            }
             Button("Login") {
                 Task {
-                    await authViewModel.signIn(username: email, password: password)
+                    // returns error message if sign in didn't work
+                    let result = await authViewModel.signIn(username: email, password: password)
+                    if let errorMessage = result {
+                        signInErrorMessage = errorMessage
+                    } 
                 }
             }
             Button("Don't have an account? Sign up.", action: {authViewModel.authState = .signUp})
@@ -39,4 +48,5 @@ struct LoginView: View {
 
 #Preview {
     LoginView()
+        .environmentObject(AuthViewModel()) // so preview doesn't crash when testing sign in button 
 }

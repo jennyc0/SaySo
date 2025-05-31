@@ -7,9 +7,19 @@
 
 import SwiftUI
 
+enum Field: Hashable {
+    case email, username, password
+}
+
 struct SignUpView: View {
+    
     @EnvironmentObject var authViewModel: AuthViewModel
-    @State var errorMessage: String?
+    
+    @State var emailErrorMessage: String?
+    @State var usernameErrorMessage: String?
+    @State var passwordErrorMessage: String?
+    
+    @FocusState private var focusedField: Field?
     
     @State var email = ""
     @State var username = ""
@@ -17,39 +27,79 @@ struct SignUpView: View {
     var body: some View {
         VStack {
             TextField("Email", text: $email)
+                .focused($focusedField, equals: .email)
+                .onChange(of: focusedField) { oldState, newState in
+                    if oldState == .email && newState != .email && email != "" {
+                        if !isValidEmail(email) {
+                            // clicked out of email box after clicking it & not entering valid email
+                            emailErrorMessage = "Please enter a valid email"
+                        }
+                    } else if newState == .email {
+                        // came back to fix error, don't show error message anymore while they try and fix
+                        emailErrorMessage = nil
+                    }
+                }
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding([.leading, .trailing])
                 .autocapitalization(.none)
                 .autocorrectionDisabled(true)
+            if let error = emailErrorMessage {
+                Text(error)
+                    .foregroundColor(.red)
+            }
             TextField("Username", text: $username)
+                .focused($focusedField, equals: .username)
+                .onChange(of: focusedField) { oldState, newState in
+                    if oldState == .username && newState != .username && username != "" {
+                        // check if username is unique
+                        if !isValidUsername(username) {
+                            
+                        }
+                        
+                    }
+                }
                 .textFieldStyle(RoundedBorderTextFieldStyle())
                 .padding([.leading, .trailing])
                 .autocapitalization(.none)
                 .autocorrectionDisabled(true)
-            
-            TextField("Password", text: $password)
+            if let error = usernameErrorMessage {
+                Text(error)
+                    .foregroundColor(.red)
+            }
+            SecureField("Password", text: $password)
+                .focused($focusedField, equals: .password)
+                .onChange(of: focusedField) { oldState, newState in
+                    if oldState == .password && newState != .password && password != "" {
+                        // check if valid password
+                        if !isValidPassword(password) {
+                            passwordErrorMessage = "Password must be at least eight characters with at least one uppercase letter, one lowercase letter, one number and one special character"
+                        }
+                    } else if newState == .password {
+                        passwordErrorMessage = nil
+                    }
+                }
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding()
+                .padding([.leading, .trailing])
                 .autocorrectionDisabled(true)
-            if let error = errorMessage {
+            if let error = passwordErrorMessage {
                 Text(error)
                     .foregroundColor(.red)
             }
             Button("Sign up") {
-                if !isValidEmail(email) {
-                    errorMessage = "Please enter a valid email"
-                } else if !isValidPassword(password) {
-                    errorMessage = "Password must be at least eight characters with at least one uppercase letter, one lowercase letter, one number and one special character"
-                } else {
-                    Task {
+                Task {
+                    if isValidEmail(email) && isValidPassword(password) && isValidUsername(username) {
+                        // pass in username too
                         await authViewModel.signUp(email: email, password: password)
                     }
                 }
-                
             }
             Button("Already have an account? Log in.", action: {authViewModel.authState = .login})
         }
     }
+}
+
+func isValidUsername(_ username: String) -> Bool {
+    return true
 }
 
 // returns true if valid email

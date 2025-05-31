@@ -9,7 +9,6 @@ import SwiftUI
 
 struct MainAppRouterView: View {
     @EnvironmentObject var authViewModel: AuthViewModel // get from AuthRouterView
-    //@StateObject var authViewModel = AuthViewModel()
 
     @StateObject var appViewModel = AppViewModel()
     init() {
