@@ -16,16 +16,21 @@ struct MainAppRouterView: View {
     var body: some View {
         
         TabView(selection: $appViewModel.currTab){
-            ExploreView()
-                .tabItem {Image(systemName: "globe.americas")}
-                .tag(Tab.explore)
-            CreatePostView()
-                .tabItem {Image(systemName: "plus.circle")}
-                .tag(Tab.createPost)
-            ProfileView()
-                .tabItem {Image(systemName: "person")}
-                .tag(Tab.profile)
-                .onAppear{print("Rendering mainAppRouterView")}
+            if authViewModel.sessionInit {
+                ExploreView()
+                    .tabItem {Image(systemName: "globe.americas")}
+                    .tag(Tab.explore)
+                FriendsView()
+                    .tabItem {Image(systemName: "person.2")}
+                    .tag(Tab.friends)
+                CreatePostView()
+                    .tabItem {Image(systemName: "plus.circle")}
+                    .tag(Tab.createPost)
+                ProfileView()
+                    .tabItem {Image(systemName: "person")}
+                    .tag(Tab.profile)
+            }
+            
             
         }
         .environmentObject(appViewModel)

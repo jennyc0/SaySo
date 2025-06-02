@@ -13,16 +13,38 @@ enum APIError: Error {
     case requestFailed
     case invalidResponse
 }
-struct APIService {
+class APIService {
     // one instance of APIService shared throughout the app
     static let shared = APIService()
     private init() {}
+    
+    var idToken: String? = nil
+    
+    func setIdToken(_ idToken: String?) {
+        self.idToken = idToken
+    }
+    
+    func getFriends() async throws -> [String] { // list of friends' userIds
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users/friends") else {
+            throw APIError.invalidURL
+        }
+        var request = URLRequest(url:url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(self.idToken ?? "")", forHTTPHeaderField: "Authorization")
+        
+        let (data, _) = try await URLSession.shared.data(for: request)
+        do {
+            let dataDict = try JSONDecoder().decode([String: [String]].self, from: data)
+            return dataDict["friends"] ?? []
+        } catch {
+            throw APIError.decodingFailed
+        }
+    }
     
     func usernameExists(_ username: String) async throws -> Bool {
         guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users?username=\(username)") else {
             throw APIError.invalidURL
         }
-        
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         
@@ -35,7 +57,6 @@ struct APIService {
         } catch {
             throw APIError.decodingFailed
         }
- 
     }
     
     func createQuestion(userId: String, postVisibility: String, questionText: String) async throws -> Bool {
@@ -68,20 +89,30 @@ struct APIService {
         return true
     }
     
-    // passes a list of [Post] that fit the condition (public/private posts)
+    // returns list of public posts or user's friends' friend-only posts
+    // need idToken for getting non-public posts
     func getPosts(publicPost: Bool) async throws -> [Post] {
-        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/questions") else {
+        let urlString: String
+        if publicPost {
+            urlString = "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/questions?publicPost=true"
+        } else {
+            urlString = "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/questions?publicPosts=false"
+        }
+        guard let url = URL(string: urlString) else {
             throw APIError.invalidURL
         }
-        
         // create GET request
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        
+        //print("idtoken: \(self.idToken ?? "")")
+        request.setValue("Bearer \(self.idToken ?? "")", forHTTPHeaderField: "Authorization") // to get friends only posts
+
         // send the request
         let (data, _) = try await URLSession.shared.data(for: request)
         
         do {
+            print(String(data: data, encoding: .utf8) ?? "Invalid UTF8")
+
             let posts = try JSONDecoder().decode([Post].self, from: data) // creats a list of posts
             return posts
         } catch {

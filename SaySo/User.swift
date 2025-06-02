@@ -13,12 +13,11 @@ struct User: Codable, Identifiable {
     var email: String
     private var friends: Array<String> // store user ids
     
-    init(email: String, username: String, userId: String) {
-        //self.id = UUID().uuidString
+    init(email: String, username: String, userId: String, friends: [String] = []) {
         self.id = userId // the "sub" of the user pool
         self.username = username
         self.email = email
-        self.friends = []
+        self.friends = friends
     }
     
     // function to add friend

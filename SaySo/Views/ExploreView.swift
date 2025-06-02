@@ -14,108 +14,56 @@ struct ExploreView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var appViewModel: AppViewModel
 
-    enum FeedType: String, CaseIterable {
+    /*enum FeedType: String, CaseIterable {
         case explore, friends
     }
-    
-    @State var selectedFeed: FeedType = .explore
-    //@State private var posts: [Post] = [] // used for testing
-    @State private var publicPosts: [Post] = []
     @State private var friendsPosts: [Post] = []
+    @State var selectedFeed: FeedType = .explore*/
     
-    @State private var isLoading = true
+    
+    @State private var publicPosts: [Post] = []
+    @State var isLoading: Bool = true
 
     var body: some View {
-        var displayedPosts: [Post] {
-            switch selectedFeed {
-                case .explore:
-                return publicPosts
-            case .friends:
-                return friendsPosts
-            }
+        
+        /*Picker("Feed Type", selection: $selectedFeed) {
+            Text("Explore").tag(FeedType.explore)
+            Text("Friends").tag(FeedType.friends)
         }
-        NavigationView {
-            VStack {
+            .pickerStyle(SegmentedPickerStyle())
+        Text("\(selectedFeed)")
+            .padding(.horizontal)
+            .frame(maxWidth: .infinity, alignment: .leading) */
                 
-                Picker("Feed Type", selection: $selectedFeed) {
-                    Text("Explore").tag(FeedType.explore)
-                    Text("Friends").tag(FeedType.friends)
-                }
-                    .pickerStyle(SegmentedPickerStyle())
-                Text("\(selectedFeed)")
-                    .padding(.horizontal)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                ScrollView {
-                    VStack(spacing: 16) {
-                        if isLoading {
-                            ProgressView("Loading...")
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        } else if displayedPosts.isEmpty {
-                            VStack(spacing: 8) {
-                                Image(systemName: "bubble.left.and.bubble.right")
-                                    .font(.largeTitle)
-                                    .foregroundColor(.gray)
-                                Text("No public posts yet.")
-                                    .foregroundColor(.gray)
-                            }
-                            .frame(maxWidth: .infinity, minHeight: 300)
-                        } else {
-                            ForEach(displayedPosts) { post in
-                                Divider()
-                                PostCardView(post: post)
-                                
-                            }
-                        }
+        ScrollView {
+            VStack(spacing: 16) {
+                if isLoading {
+                    ProgressView("Loading...")
+                        .frame(maxWidth: .infinity, alignment: .center)
+                } else if publicPosts.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "bubble.left.and.bubble.right")
+                            .font(.largeTitle)
+                            .foregroundColor(.gray)
+                        Text("No public posts yet.")
+                            .foregroundColor(.gray)
                     }
-                    
+                    .frame(maxWidth: .infinity, minHeight: 300)
+                } else {
+                    ForEach(publicPosts) { post in
+                        Divider()
+                        PostCardView(post: post)
+                        
+                    }
                 }
-                
-                .refreshable {await loadPosts()}
-                
             }
-            .task {
-                await loadPosts()
-            }
-            
-            
         }
-        
-    }
-
-    
-    func loadPosts() async {
-        if DEV_MODE {
-            print("⚠️ Skipping network call (dev mode)")
-            let posts = [  // sample post for layout/testing
-                Post(userId: "Jenny-dev", text: "This is a sample post that will take up the whole horizontal space and span multiple lines as needed to demonstrate the layout ", publicPost: true),
-                Post(userId: "Jenny-dev", text: "Another placeholder post", publicPost: true),
-                Post(userId: "Jenny-dev", text: "first private post! technically a friends only post", publicPost: false),
-                                
-            ]
-            self.publicPosts = posts.filter {
-                $0.publicPost
-            }
-            self.friendsPosts = posts.filter {
-                $0.publicPost == false
-            }
-            self.isLoading = false
-            return
+        .refreshable {
+            (isLoading, publicPosts) = await appViewModel.loadPosts(publicPosts: true)
         }
-        isLoading = true
-        
-        do {
-            let fetchedPublicPosts = try await APIService.shared.getPosts(publicPost: true)
-            let fetchedFriendsPosts = try await APIService.shared.getPosts(publicPost: false)
-            
-            self.publicPosts = fetchedPublicPosts
-            self.friendsPosts = fetchedFriendsPosts
-            self.isLoading = false
-            
-        } catch {
-            print("Failed to load posts: \(error)")
+        .task {
+            (isLoading, publicPosts) = await appViewModel.loadPosts(publicPosts: true)
         }
-        
     }
 }
 
@@ -157,4 +105,5 @@ struct PostCardView: View {
 
 #Preview {
     ExploreView()
+        .environmentObject(AppViewModel())
 }

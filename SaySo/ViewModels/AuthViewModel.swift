@@ -8,19 +8,22 @@
 import Foundation
 import Amplify
 import AWSCognitoAuthPlugin
+import AWSPluginsCore
 
 
 // different log-in states you can be in
 enum AuthState {
     case signUp
     case login
-    case confirmCode(email: String)
+    case confirmCode(email: String, username: String, userId: String)
     case loggedIn
 }
 
 final class AuthViewModel: ObservableObject {
     @Published var authState: AuthState = .signUp
     @Published var currentUser: User? = nil
+    @Published var idToken: String? = nil
+    @Published var sessionInit = false
     
     init() {
         Task {
@@ -32,26 +35,39 @@ final class AuthViewModel: ObservableObject {
     func fetchAuthSession() async {
         do {
             let session = try await Amplify.Auth.fetchAuthSession()
-            if session.isSignedIn {
-                DispatchQueue.main.async {
-                    self.authState = .loggedIn
-                }
-                do {
-                    let attributes = try await Amplify.Auth.fetchUserAttributes() // returns a [AuthUserAttributes(key: __, value: __)]
-                    
-                    let email = attributes.first(where: { $0.key.rawValue == "email" })?.value ?? ""
-                    let username = attributes.first(where: {$0.key.rawValue == "custom:username"})?.value ?? ""
-                    let userId = attributes.first(where:{ $0.key.rawValue == "sub"})?.value ?? ""
+            if let cognitoTokenProvider = session as? AuthCognitoTokensProvider {
+                let tokens = try cognitoTokenProvider.getCognitoTokens().get()
+                //let accessToken = tokens.accessToken
+                let idToken = tokens.idToken // for getting friendsIds
+                
+                if session.isSignedIn {
                     DispatchQueue.main.async {
-                        self.currentUser = User(email: email, username: username, userId: userId)
-                        print("current user:\(self.currentUser?.id ?? "") ")
+                        self.authState = .loggedIn
+                    }
+                    do {
+                        let attributes = try await Amplify.Auth.fetchUserAttributes() // returns a [AuthUserAttributes(key: __, value: __)]
+                        let email = attributes.first(where: { $0.key.rawValue == "email" })?.value ?? ""
+                        let username = attributes.first(where: {$0.key.rawValue == "custom:username"})?.value ?? ""
+                        let userId = attributes.first(where:{ $0.key.rawValue == "sub"})?.value ?? ""
+                        
+                        APIService.shared.setIdToken(idToken)
+                        // get list of friends ids from dynamodb Users-dev table
+                        let friendsIds = try await APIService.shared.getFriends()
+
+                        DispatchQueue.main.async {
+                            self.currentUser = User(email: email, username: username, userId: userId, friends: friendsIds)
+                            print("current user:\(self.currentUser?.id ?? "") ")
+                            self.idToken = idToken
+                            self.sessionInit = true
+                        }
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        self.authState = .login
                     }
                 }
-            } else {
-                DispatchQueue.main.async {
-                    self.authState = .login
-                }
             }
+            
         } catch {
             print("Failed to fetch session: \(error)")
         }
@@ -64,7 +80,7 @@ final class AuthViewModel: ObservableObject {
             if case let .confirmUser(deliveryDetails, _, userId) = nextStep {
                 print("Delivery details \(String(describing: deliveryDetails)) for userId: \(String(describing: userId))")
                 DispatchQueue.main.async {
-                    self.authState = .confirmCode(email: email)
+                    self.authState = .confirmCode(email: email, username: username, userId: userId ?? "")
                 }
             } else {
                 print("SignUp Complete")
@@ -78,7 +94,7 @@ final class AuthViewModel: ObservableObject {
     
     // username is email
     func confirmSignUp(confirmationCode: String) async {
-        guard case let .confirmCode(email) = authState else {
+        guard case let .confirmCode(email, username, userId) = authState else {
             print("not in confirm code state")
             return
         }
@@ -89,6 +105,9 @@ final class AuthViewModel: ObservableObject {
                 print("Sign up confirmed and complete")
                 DispatchQueue.main.async {
                     self.authState = .loggedIn
+                }
+                DispatchQueue.main.async {
+                    self.currentUser = User(email: email, username: username, userId: userId)
                 }
 
             } else {
@@ -108,9 +127,7 @@ final class AuthViewModel: ObservableObject {
             let result = try await AuthService.shared.signIn(username: username, password: password)
             if result.isSignedIn {
                 print("Sign in succeeded")
-                DispatchQueue.main.async {
-                    self.authState = .loggedIn
-                }
+                await fetchAuthSession()
             }
         } catch let error as AuthError {
             print("Sign in failed \(error)")
@@ -134,6 +151,7 @@ final class AuthViewModel: ObservableObject {
             print("successful sign out")
             DispatchQueue.main.async{
                 self.authState = .login
+                self.sessionInit = false
             }
             
         case let .partial(revokeTokenError, globalSignOutError, hostedUIError):
