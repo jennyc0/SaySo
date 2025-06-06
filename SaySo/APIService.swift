@@ -20,6 +20,50 @@ class APIService {
     
     var idToken: String? = nil
     
+    func changeVoteCount(postId: String, voteYes: Bool, delta: Int) async throws -> Bool {
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/questions") else {
+            throw APIError.invalidURL
+        }
+        let vote = Vote(postId: postId, vote: voteYes ? "yes" : "no", delta: delta)
+        guard let body = try? JSONEncoder().encode(vote) else {
+            throw APIError.encodingFailed
+        }
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "PATCH"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw APIError.invalidResponse
+        }
+        return true
+        
+    }
+     
+    func logVote(postId: String, userId: String, voteYes: Bool) async throws -> Bool {
+        // use idToken to store id of the user voting
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/votes") else {
+            throw APIError.invalidURL
+        }
+        
+        let vote = Vote(postId: postId, userId: userId, vote: voteYes ? "yes" : "no", delta: 1)
+        guard let body = try? JSONEncoder().encode(vote) else {
+            throw APIError.encodingFailed
+        }
+        var request = URLRequest(url:url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            throw APIError.invalidResponse
+        }
+        return true 
+        
+    }
     func setIdToken(_ idToken: String?) {
         self.idToken = idToken
     }
@@ -40,7 +84,13 @@ class APIService {
             throw APIError.decodingFailed
         }
     }
-    
+    /*
+     TODO
+    func userSearchQuery(_ query: String) async throws -> [User] {
+        
+        
+        
+    }*/
     func usernameExists(_ username: String) async throws -> Bool {
         guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users?username=\(username)") else {
             throw APIError.invalidURL
@@ -89,6 +139,21 @@ class APIService {
         return true
     }
     
+    // gets a singular post to update
+    func getPost(postId: String) async throws -> Post {
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/questions/\(postId)") else {
+            throw APIError.invalidURL
+        }
+        var request = URLRequest(url:url)
+        request.httpMethod = "GET"
+        let (data, _) = try await URLSession.shared.data(for: request)
+        do {
+            let post = try JSONDecoder().decode(Post.self, from: data)
+            return post
+        } catch {
+            throw APIError.decodingFailed
+        }
+    }
     // returns list of public posts or user's friends' friend-only posts
     // need idToken for getting non-public posts
     func getPosts(publicPost: Bool) async throws -> [Post] {

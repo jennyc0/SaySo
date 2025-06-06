@@ -20,7 +20,6 @@ struct ExploreView: View {
     @State private var friendsPosts: [Post] = []
     @State var selectedFeed: FeedType = .explore*/
     
-    
     @State private var publicPosts: [Post] = []
     @State var isLoading: Bool = true
 
@@ -50,10 +49,9 @@ struct ExploreView: View {
                     }
                     .frame(maxWidth: .infinity, minHeight: 300)
                 } else {
-                    ForEach(publicPosts) { post in
+                    ForEach($publicPosts) { post in
                         Divider()
                         PostCardView(post: post)
-                        
                     }
                 }
             }
@@ -71,7 +69,11 @@ struct ExploreView: View {
 // move this to Post file
 // how each post will be displayed
 struct PostCardView: View {
-    let post: Post
+    @Binding var post: Post
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @EnvironmentObject var appViewModel: AppViewModel
+    @State var voted: Bool = false
+    
     var body: some View {
         VStack(alignment: .leading) {
             Text(post.createdAt)
@@ -79,18 +81,61 @@ struct PostCardView: View {
                 .foregroundColor(.gray)
             Text(post.text)
                 .font(.body)
-            Button(action: {}) {
-                Text("Yes")
-                    .frame(maxWidth: .infinity)
-                    .background(Color.gray)
-                    .cornerRadius(7)
+            Button {
+                voted = true
+                Task {
+                    guard let userId = authViewModel.currentUser?.id else {
+                        print("No one currently signed in, can't vote")
+                        return
+                    }
+                    // create a Vote
+                    let response = await appViewModel.vote(postId: post.id, userId: userId, voteYes: true)
+                    if response {
+                        // animation to update the bars to the percentages of votes
+                        let newPost: Post = await appViewModel.loadPost(postId: post.id) ?? post
+                        self.post = newPost
+                    }
+                }
+                
+            } label: {
+                if voted {
+                    Text(String(post.votedYes))
+                } else {
+                    Text("Yes")
+                        .frame(maxWidth: .infinity)
+                        .border(Color.gray)
+                    
+                }
+                
             }
-            Button(action: {}) {
-                Text("No")
-                    .frame(maxWidth: .infinity)
-                    .background(Color.gray)
-                    .cornerRadius(7)
+            .disabled(voted)
+            
+            
+            Button{
+                voted = true
+                Task {
+                    guard let userId = authViewModel.currentUser?.id else {
+                        print("No one currently signed in, can't vote")
+                        return
+                    }
+                    let response = await appViewModel.vote(postId: post.id, userId: userId, voteYes: false)
+                    if response {
+                        // animation to update the bars to the percentages of votes
+                        let newPost: Post = await appViewModel.loadPost(postId: post.id) ?? post
+                        self.post = newPost
+                    }
+                }
+            } label: {
+                if voted {
+                    Text(String(post.votedNo))
+                } else {
+                    Text("No")
+                        .frame(maxWidth: .infinity)
+                        .border(Color.gray)
+                }
+                
             }
+            .disabled(voted)
             
         }
         
@@ -106,4 +151,5 @@ struct PostCardView: View {
 #Preview {
     ExploreView()
         .environmentObject(AppViewModel())
+        .environmentObject(AuthViewModel())
 }

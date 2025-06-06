@@ -10,11 +10,13 @@ import SwiftUI
 
 
 enum Tab: Hashable {
-    case profile
-    case createPost
     case explore
     case friends
+    case createPost
+    case search
+    case profile
 }
+
 final class AppViewModel: ObservableObject {
     
     @Published var currTab: Tab = .explore
@@ -22,11 +24,45 @@ final class AppViewModel: ObservableObject {
     init() {
         
     }
+    // userId passed from authViewModel.currentUser.id
+    func vote(postId: String, userId: String, voteYes: Bool) async -> Bool {
+        do {
+            let logVoteSuccess = try await APIService.shared.logVote(postId: postId, userId: userId, voteYes: voteYes)
+            print("logVoteSuccess: \(logVoteSuccess)")
+            let changeVoteCountSuccess = try await APIService.shared.changeVoteCount(postId: postId, voteYes: voteYes, delta: 1)
+            
+            print("changeVoteCountSuccess: \(changeVoteCountSuccess)" )
+            return logVoteSuccess && changeVoteCountSuccess
+        } catch {
+            print("failed to log vote: \(error)")
+            return false
+        }
+        // in frontend, change Post w same postId
+    }
+    
+    //TODO
+    func userSearchQuery(_ query: String) async -> [User] {
+        if query.count < 1 {
+            return []
+        }
+        
+        return []
+        
+    }
     func usernameTaken(_ username: String) async throws -> Bool {
         let exists = try await APIService.shared.usernameExists(username)
         return exists
     }
     
+    func loadPost(postId: String) async -> Post? {
+        do {
+            let post = try await APIService.shared.getPost(postId: postId)
+            return post
+        } catch {
+            print("Failed to get post: \(error)")
+            return nil
+        }
+    }
     // to display posts
     func loadPosts(publicPosts: Bool) async -> (Bool, [Post]) { // returns ifLoading, loadedPosts
         if DEV_MODE {
