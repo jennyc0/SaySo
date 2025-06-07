@@ -91,6 +91,36 @@ class APIService {
         
         
     }*/
+    // if vote exists, return the vote value
+    func voteExists(postId: String) async throws -> (Bool, String) {
+        struct VoteResponse: Decodable {
+            let voted: Bool
+            let vote: Bool?
+        }
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/votes/\(postId)") else {
+            throw APIError.invalidURL
+        }
+        var request = URLRequest(url:url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(self.idToken ?? "")", forHTTPHeaderField: "Authorization")
+        
+        let (data, _) = try await URLSession.shared.data(for: request)
+        do {
+            let response = try JSONDecoder().decode(VoteResponse.self, from: data)
+            
+            if response.voted {
+                if let vote = response.vote {
+                    return (true, vote ? "yes" : "no")
+                }
+            } else {
+                return (false, "")
+            }
+            
+        } catch {
+            throw APIError.decodingFailed
+        }
+        return (false, "")
+    }
     func usernameExists(_ username: String) async throws -> Bool {
         guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users?username=\(username)") else {
             throw APIError.invalidURL
@@ -102,7 +132,6 @@ class APIService {
         
         do {
             let dataDict = try JSONDecoder().decode([String: Bool].self, from: data)
-            
             return dataDict["exists"] ?? false
         } catch {
             throw APIError.decodingFailed
@@ -176,7 +205,7 @@ class APIService {
         let (data, _) = try await URLSession.shared.data(for: request)
         
         do {
-            print(String(data: data, encoding: .utf8) ?? "Invalid UTF8")
+            //print(String(data: data, encoding: .utf8) ?? "Invalid UTF8")
 
             let posts = try JSONDecoder().decode([Post].self, from: data) // creats a list of posts
             return posts

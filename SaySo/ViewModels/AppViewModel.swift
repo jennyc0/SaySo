@@ -39,7 +39,16 @@ final class AppViewModel: ObservableObject {
         }
         // in frontend, change Post w same postId
     }
-    
+    func voteExists(postId: String) async -> (Bool, String){
+        do {
+            let (voteExists, vote) = try await APIService.shared.voteExists(postId: postId)
+            print("VoteExists: \(voteExists), vote: \(vote)")
+            return (voteExists, vote)
+        } catch {
+            print("Failed to verify if vote exists: \(error)")
+            return (false, "")
+        }
+    }
     //TODO
     func userSearchQuery(_ query: String) async -> [User] {
         if query.count < 1 {

@@ -72,7 +72,8 @@ struct PostCardView: View {
     @Binding var post: Post
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var appViewModel: AppViewModel
-    @State var voted: Bool = false
+    @State private var voted: Bool = false
+    @State private var userVote: String = ""
     
     var body: some View {
         VStack(alignment: .leading) {
@@ -81,6 +82,7 @@ struct PostCardView: View {
                 .foregroundColor(.gray)
             Text(post.text)
                 .font(.body)
+            // yes button
             Button {
                 voted = true
                 Task {
@@ -99,18 +101,17 @@ struct PostCardView: View {
                 
             } label: {
                 if voted {
-                    Text(String(post.votedYes))
+                    Text(String(post.votedYes)) // display number of people who voted Yes
                 } else {
                     Text("Yes")
                         .frame(maxWidth: .infinity)
                         .border(Color.gray)
-                    
                 }
-                
             }
+            .border(userVote == "yes" ? Color.green : Color.gray)
             .disabled(voted)
             
-            
+            // no button
             Button{
                 voted = true
                 Task {
@@ -133,11 +134,18 @@ struct PostCardView: View {
                         .frame(maxWidth: .infinity)
                         .border(Color.gray)
                 }
-                
             }
+            .border(userVote == "no" ? Color.green : Color.gray)
             .disabled(voted)
             
         }
+        .task {
+            // check if user already voted on this post
+            let (voted, vote) = await appViewModel.voteExists(postId: post.id)
+            self.voted = voted
+            self.userVote = vote
+        }
+        
         
         .padding(.horizontal)
         .cornerRadius(10)
