@@ -206,8 +206,8 @@ class APIService {
         
         do {
             //print(String(data: data, encoding: .utf8) ?? "Invalid UTF8")
-
             let posts = try JSONDecoder().decode([Post].self, from: data) // creats a list of posts
+            print(posts)
             return posts
         } catch {
             throw APIError.decodingFailed

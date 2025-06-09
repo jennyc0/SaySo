@@ -12,7 +12,6 @@ struct MainAppRouterView: View {
     // get from AuthRouterView
     @EnvironmentObject var authViewModel: AuthViewModel
     @EnvironmentObject var appViewModel: AppViewModel
-    
     var body: some View {
         
         TabView(selection: $appViewModel.currTab){

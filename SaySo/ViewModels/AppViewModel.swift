@@ -18,12 +18,61 @@ enum Tab: Hashable {
 }
 
 final class AppViewModel: ObservableObject {
+    @Published var friendsPosts: [Post] = []
+    @Published var hasLoadedFriends = false
+    @Published var isLoadingFriends = true
+    
+    @Published var publicPosts: [Post] = []
+    @Published var hasLoadedExplore = false
+    @Published var isLoadingExplore = true
+
+    @Published var hasLoadedProfile = false
     
     @Published var currTab: Tab = .explore
     
     init() {
         
     }
+    
+    @MainActor
+    func loadFriendsIfNeeded() async {
+        guard !hasLoadedFriends else {return} // only fetch from backend if neccesary
+        isLoadingFriends = true
+        var posts: [Post] = []
+        (isLoadingFriends, posts) = await loadPosts(publicPosts: false)
+        
+        //check if user has voted already on the loaded posts
+        for i in posts.indices {
+            // check if signed in user already voted on this post
+            let (voted, vote) = await voteExists(postId: posts[i].id)
+            posts[i].userVoted = voted
+            posts[i].userVote = vote
+        }
+        friendsPosts = posts
+        hasLoadedFriends = true
+    }
+    
+    @MainActor
+    func loadExploreIfNeeded() async {
+        guard !hasLoadedExplore else {return} // only fetch from backend if neccesary
+        
+        isLoadingExplore = true
+        var posts: [Post] = []
+
+        (isLoadingExplore, posts) = await loadPosts(publicPosts: true)
+        
+        //check if user has voted already on the loaded posts
+        for i in posts.indices {
+            // check if signed in user already voted on this post
+            let (voted, vote) = await voteExists(postId: posts[i].id)
+            posts[i].userVoted = voted
+            posts[i].userVote = vote
+        }
+        publicPosts = posts
+        hasLoadedExplore = true
+    }
+    
+    
     // userId passed from authViewModel.currentUser.id
     func vote(postId: String, userId: String, voteYes: Bool) async -> Bool {
         do {
