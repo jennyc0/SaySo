@@ -13,7 +13,7 @@ enum Tab: Hashable {
     case explore
     case friends
     case createPost
-    case search
+    //case search
     case profile
 }
 
@@ -77,10 +77,8 @@ final class AppViewModel: ObservableObject {
     func vote(postId: String, userId: String, voteYes: Bool) async -> Bool {
         do {
             let logVoteSuccess = try await APIService.shared.logVote(postId: postId, userId: userId, voteYes: voteYes)
-            print("logVoteSuccess: \(logVoteSuccess)")
             let changeVoteCountSuccess = try await APIService.shared.changeVoteCount(postId: postId, voteYes: voteYes, delta: 1)
             
-            print("changeVoteCountSuccess: \(changeVoteCountSuccess)" )
             return logVoteSuccess && changeVoteCountSuccess
         } catch {
             print("failed to log vote: \(error)")

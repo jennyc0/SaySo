@@ -13,7 +13,21 @@ struct FriendsView: View {
 
     
     var body: some View {
+        
         NavigationStack {
+            HStack {
+                Spacer()
+                
+                NavigationLink {
+                    SearchView()
+                } label: {
+                    Image(systemName: "person.fill.badge.plus")
+                        
+                }
+                .padding()
+            }
+            
+            
             ScrollView {
                 VStack(spacing: 16) {
                     if appViewModel.isLoadingFriends {

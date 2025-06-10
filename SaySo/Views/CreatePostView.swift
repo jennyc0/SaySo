@@ -70,7 +70,7 @@ struct CreatePostView: View {
             .disabled(questionText == "")
         
             if newQ {
-                // show confirmation on console log
+                // show confirmation
                 Text("Question submitted")
             }
             Spacer()

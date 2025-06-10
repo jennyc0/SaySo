@@ -20,12 +20,11 @@ def handler(event, context):
         'email': email,
         'username': username, 
         'friends': [], 
-        'createdAt': datetime.datetime.utcnow().isoformat()
+        'createdAt': datetime.datetime.utcnow().isoformat(),
+        'friendRequestsSent': [],
+        'friendRequestsReceived': []
     }
 
     table.put_item(Item=user)
     
-    return event 
-  
-    
-  
+    return event

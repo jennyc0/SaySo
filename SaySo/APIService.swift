@@ -68,8 +68,10 @@ class APIService {
         self.idToken = idToken
     }
     
-    func getFriends() async throws -> [String] { // list of friends' userIds
-        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users/friends") else {
+    func getFriends(field: String) async throws -> [String] { // list of friends' userIds
+        //field = friendRequestsSent, friendRequestsReceived, friends
+        
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users/friends?field=\(field)") else {
             throw APIError.invalidURL
         }
         var request = URLRequest(url:url)
@@ -79,11 +81,12 @@ class APIService {
         let (data, _) = try await URLSession.shared.data(for: request)
         do {
             let dataDict = try JSONDecoder().decode([String: [String]].self, from: data)
-            return dataDict["friends"] ?? []
+            return dataDict[field] ?? []
         } catch {
             throw APIError.decodingFailed
         }
     }
+    
     /*
      TODO
     func userSearchQuery(_ query: String) async throws -> [User] {
@@ -91,6 +94,7 @@ class APIService {
         
         
     }*/
+    
     // if vote exists, return the vote value
     func voteExists(postId: String) async throws -> (Bool, String) {
         struct VoteResponse: Decodable {

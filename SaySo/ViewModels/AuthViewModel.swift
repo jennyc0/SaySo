@@ -15,7 +15,7 @@ import AWSPluginsCore
 enum AuthState {
     case signUp
     case login
-    case confirmCode(email: String, username: String, userId: String)
+    case confirmCode(email: String, username: String, userId: String, password: String)
     case loggedIn
 }
 
@@ -52,10 +52,11 @@ final class AuthViewModel: ObservableObject {
                         
                         APIService.shared.setIdToken(idToken)
                         // get list of friends ids from dynamodb Users-dev table
-                        let friendsIds = try await APIService.shared.getFriends()
-
+                        let friendsIds = try await APIService.shared.getFriends(field: "friends")
+                        let friendReqSent = try await APIService.shared.getFriends(field: "friendRequestsSent")
+                        let friendReqReceived = try await APIService.shared.getFriends(field: "friendRequestsReceived")
                         DispatchQueue.main.async {
-                            self.currentUser = User(email: email, username: username, userId: userId, friends: friendsIds)
+                            self.currentUser = User(email: email, username: username, userId: userId, friends: friendsIds, friendRequestsSent: friendReqSent, friendRequestsReceived: friendReqReceived)
                             print("current user:\(self.currentUser?.id ?? "") ")
                             self.idToken = idToken
                             self.sessionInit = true
@@ -80,7 +81,7 @@ final class AuthViewModel: ObservableObject {
             if case let .confirmUser(deliveryDetails, _, userId) = nextStep {
                 print("Delivery details \(String(describing: deliveryDetails)) for userId: \(String(describing: userId))")
                 DispatchQueue.main.async {
-                    self.authState = .confirmCode(email: email, username: username, userId: userId ?? "")
+                    self.authState = .confirmCode(email: email, username: username, userId: userId ?? "", password: password)
                 }
             } else {
                 print("SignUp Complete")
@@ -94,7 +95,7 @@ final class AuthViewModel: ObservableObject {
     
     // username is email
     func confirmSignUp(confirmationCode: String) async {
-        guard case let .confirmCode(email, username, userId) = authState else {
+        guard case let .confirmCode(email, username, userId, password) = authState else {
             print("not in confirm code state")
             return
         }
@@ -103,16 +104,24 @@ final class AuthViewModel: ObservableObject {
             let result = try await AuthService.shared.confirmSignUp(for: email, with: confirmationCode)
             if result.isSignUpComplete {
                 print("Sign up confirmed and complete")
-                DispatchQueue.main.async {
+                await MainActor.run {
                     self.authState = .loggedIn
-                }
-                DispatchQueue.main.async {
-                    self.currentUser = User(email: email, username: username, userId: userId)
-                }
 
+                }
+                
             } else {
                 print("sign up confirmed but not complete ")
             }
+            
+            switch self.authState {
+            case .loggedIn:
+                let _ = await signIn(username: email, password: password)
+            default:
+                print("Failed to log in")
+                return
+            }
+            
+            
         } catch let error as AuthError{
             print("AuthError: \(error)")
         } catch {

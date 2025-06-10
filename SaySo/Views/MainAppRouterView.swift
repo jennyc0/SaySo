@@ -22,9 +22,10 @@ struct MainAppRouterView: View {
                 FriendsView()
                     .tabItem {Image(systemName: "person.2")}
                     .tag(Tab.friends)
-                SearchView()
+                /*SearchView()
                     .tabItem {Image(systemName: "magnifyingglass")}
                     .tag(Tab.search)
+                 */
                 CreatePostView()
                     .tabItem {Image(systemName: "plus.circle")}
                     .tag(Tab.createPost)
