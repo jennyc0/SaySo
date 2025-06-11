@@ -53,7 +53,10 @@ struct FriendsView: View {
         }
         .navigationTitle("Friends")
         .refreshable {
-            (appViewModel.isLoadingFriends, appViewModel.friendsPosts) = await appViewModel.loadPosts(publicPosts: false)
+            Task {
+                appViewModel.hasLoadedFriends = false
+                await appViewModel.loadFriendsIfNeeded()
+            }
         }
         .task {
             await appViewModel.loadFriendsIfNeeded()

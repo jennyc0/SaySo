@@ -8,7 +8,6 @@
 
 import SwiftUI
 
-let DEV_MODE = false
 
 struct ExploreView: View {
     @EnvironmentObject var authViewModel: AuthViewModel
@@ -42,7 +41,11 @@ struct ExploreView: View {
             }
         }
         .refreshable {
-            (appViewModel.isLoadingExplore, appViewModel.publicPosts) = await appViewModel.loadPosts(publicPosts: true)
+            Task {
+                appViewModel.hasLoadedExplore = false
+                await appViewModel.loadExploreIfNeeded()
+            }
+            
         }
         .task {
             await appViewModel.loadExploreIfNeeded()

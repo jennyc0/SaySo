@@ -14,8 +14,8 @@ struct Post: Codable, Identifiable {
     var createdAt: String
     var publicPost: Bool
     var userId: String // who created the post
-    var userVoted: Bool? = nil
-    var userVote: String? = nil // "yes" or "no"
+    var userVoted: Bool?
+    var userVote: String? // "yes" or "no"
     
     
     // a post is only created when a new post is published; the user isn't allowed to vote on their own post.

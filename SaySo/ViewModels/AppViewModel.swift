@@ -58,22 +58,26 @@ final class AppViewModel: ObservableObject {
         
         isLoadingExplore = true
         var posts: [Post] = []
-
-        (isLoadingExplore, posts) = await loadPosts(publicPosts: true)
         
+        (isLoadingExplore, posts) = await loadPosts(publicPosts: true)
+        print("finished running loadposts")
+        print("isLoadingExplore: \(isLoadingExplore)")
+        print("posts.count: \(posts.count)")
         //check if user has voted already on the loaded posts
         for i in posts.indices {
             // check if signed in user already voted on this post
+            print("checking \(i)th post")
             let (voted, vote) = await voteExists(postId: posts[i].id)
             posts[i].userVoted = voted
             posts[i].userVote = vote
         }
+        print("Finished checking if voteexists for all the posts")
         publicPosts = posts
         hasLoadedExplore = true
     }
     
     
-    // userId passed from authViewModel.currentUser.id
+    // userId passed from authViewModel.currentUser.userId
     func vote(postId: String, userId: String, voteYes: Bool) async -> Bool {
         do {
             let logVoteSuccess = try await APIService.shared.logVote(postId: postId, userId: userId, voteYes: voteYes)
@@ -96,17 +100,26 @@ final class AppViewModel: ObservableObject {
             return (false, "")
         }
     }
-    //TODO
-    func userSearchQuery(_ query: String) async -> [User] {
+    
+    func userSearchQuery(_ initialQuery: String) async -> [User] {
+        let query = initialQuery.lowercased()
+        
         if query.count < 1 {
             return []
         }
         
-        return []
-        
+        do {
+            let users = try await APIService.shared.userSearchQuery(query)
+            return users
+        } catch {
+            print("Failed to search for user: \(error)")
+            return []
+        }
     }
+    
     func usernameTaken(_ username: String) async throws -> Bool {
-        let exists = try await APIService.shared.usernameExists(username)
+        let usernameLower = username.lowercased()
+        let exists = try await APIService.shared.usernameExists(usernameLower)
         return exists
     }
     
@@ -121,21 +134,6 @@ final class AppViewModel: ObservableObject {
     }
     // to display posts
     func loadPosts(publicPosts: Bool) async -> (Bool, [Post]) { // returns ifLoading, loadedPosts
-        if DEV_MODE {
-            print("⚠️ Skipping network call (dev mode)")
-            let posts = [  // sample post for layout/testing
-                Post(userId: "Jenny-dev", text: "This is a sample post that will take up the whole horizontal space and span multiple lines as needed to demonstrate the layout ", publicPost: true),
-                Post(userId: "Jenny-dev", text: "Another placeholder post", publicPost: true),
-                Post(userId: "Jenny-dev", text: "first private post! technically a friends only post", publicPost: false),
-                                
-            ]
-            if publicPosts {
-                return (false, posts.filter {$0.publicPost})
-            } else {
-                // user's friends' posts
-                return (false, posts.filter {$0.publicPost == false})
-            }
-        }
         
         do {
             // fetch Public Posts

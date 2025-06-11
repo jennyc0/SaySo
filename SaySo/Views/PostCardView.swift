@@ -22,6 +22,7 @@ struct PostCardView: View {
             Text(post.text)
                 .font(.body)
             VoteBar(
+                
                 voted: post.userVoted!,
                 yesPercentage: post.userVoted! ? Double(post.votedYes) / Double(post.votedYes + post.votedNo) : 0.5,
                 votedYes: post.userVote == "yes" ? true : false,

@@ -15,7 +15,7 @@ import AWSPluginsCore
 enum AuthState {
     case signUp
     case login
-    case confirmCode(email: String, username: String, userId: String, password: String)
+    case confirmCode(email: String, password: String)
     case loggedIn
 }
 
@@ -77,11 +77,14 @@ final class AuthViewModel: ObservableObject {
      
     func signUp(email: String, password: String, username: String) async {
         do {
-            let nextStep = try await AuthService.shared.signUp(email: email, password: password, username: username)
+            let emailLower = email.lowercased()
+            let usernameLower = username.lowercased()
+            
+            let nextStep = try await AuthService.shared.signUp(email: emailLower, password: password, username: usernameLower)
             if case let .confirmUser(deliveryDetails, _, userId) = nextStep {
                 print("Delivery details \(String(describing: deliveryDetails)) for userId: \(String(describing: userId))")
                 DispatchQueue.main.async {
-                    self.authState = .confirmCode(email: email, username: username, userId: userId ?? "", password: password)
+                    self.authState = .confirmCode(email: emailLower, password: password)
                 }
             } else {
                 print("SignUp Complete")
@@ -95,7 +98,7 @@ final class AuthViewModel: ObservableObject {
     
     // username is email
     func confirmSignUp(confirmationCode: String) async {
-        guard case let .confirmCode(email, username, userId, password) = authState else {
+        guard case let .confirmCode(email, password) = authState else {
             print("not in confirm code state")
             return
         }
@@ -133,7 +136,9 @@ final class AuthViewModel: ObservableObject {
     //username is email
     func signIn(username: String, password: String) async -> String? {
         do {
-            let result = try await AuthService.shared.signIn(username: username, password: password)
+            let emailLower = username.lowercased()
+            
+            let result = try await AuthService.shared.signIn(username: emailLower, password: password)
             if result.isSignedIn {
                 print("Sign in succeeded")
                 await fetchAuthSession()

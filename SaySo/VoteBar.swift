@@ -10,7 +10,7 @@ import SwiftUI
 struct VoteBar: View {
     var voted: Bool = false
     var yesPercentage: Double
-    var votedYes: Bool // gray background for chosen option
+    var votedYes: Bool // gray background for chosen option 
     
     var onVote: ((Bool) -> Void)?  // optional call back
     

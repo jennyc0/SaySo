@@ -8,7 +8,8 @@
 import Foundation
 
 struct User: Codable, Identifiable {
-    var id: String
+    var userId: String
+    var id: String {userId}
     var username: String
     var email: String
     
@@ -17,7 +18,7 @@ struct User: Codable, Identifiable {
     var friendRequestsReceived: Array<String>
     
     init(email: String, username: String, userId: String, friends: [String] = [], friendRequestsSent: [String] = [], friendRequestsReceived: [String] = []) {
-        self.id = userId // the "sub" of the user pool
+        self.userId = userId // the "sub" of the user pool
         self.username = username
         self.email = email
         self.friends = friends
