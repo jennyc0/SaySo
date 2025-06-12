@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct User: Codable, Identifiable {
+struct User: Codable, Identifiable, Equatable {
     var userId: String
     var id: String {userId}
     var username: String
@@ -17,6 +17,10 @@ struct User: Codable, Identifiable {
     var friendRequestsSent: Array<String>
     var friendRequestsReceived: Array<String>
     
+    static func == (lhs: User, rhs: User) -> Bool {
+        lhs.userId == rhs.userId
+    }
+    
     init(email: String, username: String, userId: String, friends: [String] = [], friendRequestsSent: [String] = [], friendRequestsReceived: [String] = []) {
         self.userId = userId // the "sub" of the user pool
         self.username = username
@@ -25,10 +29,5 @@ struct User: Codable, Identifiable {
         self.friendRequestsSent = friendRequestsSent
         self.friendRequestsReceived = friendRequestsReceived
         
-    }
-    
-    // function to add friend
-    mutating func addFriend(friendID: String) {
-        self.friends.append(friendID)
     }
 }

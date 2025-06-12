@@ -21,6 +21,22 @@ class APIService {
     
     var idToken: String? = nil
     
+    func getUser(userId: String) async throws -> User {
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users/\(userId)") else {
+            throw APIError.invalidURL
+        }
+        var request = URLRequest(url:url)
+        request.httpMethod = "GET"
+        let (data, _) = try await URLSession.shared.data(for: request)
+        do {
+            let user = try JSONDecoder().decode(User.self, from: data)
+            return user 
+        } catch {
+            throw APIError.decodingFailed
+        }
+ 
+    }
+    
     func changeVoteCount(postId: String, voteYes: Bool, delta: Int) async throws -> Bool {
         guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/questions") else {
             throw APIError.invalidURL
@@ -42,7 +58,6 @@ class APIService {
         return true
         
     }
-     
     func logVote(postId: String, userId: String, voteYes: Bool) async throws -> Bool {
         // use idToken to store id of the user voting
         guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/votes") else {
@@ -69,7 +84,8 @@ class APIService {
         self.idToken = idToken
     }
     
-    func getFriends(field: String) async throws -> [String] { // list of friends' userIds
+    func getFriends(field: String) async throws -> [String] { //returns list of friends' userIds
+        // can get 3 different fields
         //field = friendRequestsSent, friendRequestsReceived, friends
         
         guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users/friends?field=\(field)") else {
@@ -119,7 +135,59 @@ class APIService {
         return (false, "")
     }
     
-    // get results for looking up a username 
+    // returns updated value of currentUser 
+    func sendFriendRequest(to friendId: String) async throws -> User {
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users/\(friendId)/friend-requests") else {
+            throw APIError.invalidURL
+        }
+        var request = URLRequest(url:url)
+        request.httpMethod = "PATCH"
+        guard let token = self.idToken, !token.isEmpty else {
+            throw APIError.missingToken
+        }
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                
+        let (data, response) = try await URLSession.shared.data(for: request)
+        print("Finished sending request")
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            //print("Status Code: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+            throw APIError.invalidResponse
+        }
+        
+        do {
+            return try JSONDecoder().decode(User.self, from: data)
+        } catch {
+            throw APIError.decodingFailed
+        }
+        
+    }
+    
+    // return updated user (updated [friends] data member)
+    func acceptFriendRequest(friendId: String) async throws -> User {
+        print("Sending friendId: \(friendId)")
+        guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users/\(friendId)/friend-requests/accept" ) else {
+            throw APIError.invalidURL
+        }
+        var request = URLRequest(url:url)
+        request.httpMethod = "PATCH"
+        guard let token = self.idToken, !token.isEmpty else {
+            throw APIError.missingToken
+        }
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        print("Finished sending request")
+        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+            print("Status Code: \((response as? HTTPURLResponse)?.statusCode ?? -1)")
+            throw APIError.invalidResponse
+        }
+        do {
+            return try JSONDecoder().decode(User.self, from: data)
+        } catch {
+            throw APIError.decodingFailed
+        }
+    }
+    // get results for looking up a username
     func userSearchQuery(_ query: String) async throws -> [User] {
         guard let url = URL(string: "https://8dtu6dj0w6.execute-api.us-west-2.amazonaws.com/users/search?query=\(query)" ) else {
             throw APIError.invalidURL
@@ -129,8 +197,8 @@ class APIService {
         
         let (data, _) = try await URLSession.shared.data(for: request) // send request
         
-        let jsonString = String(data: data, encoding: .utf8)
-        print("Raw JSON: \(jsonString ?? "nil")")
+        //let jsonString = String(data: data, encoding: .utf8)
+        //print("Raw JSON: \(jsonString ?? "nil")")
 
         do {
             return try JSONDecoder().decode([User].self, from: data)
@@ -225,17 +293,16 @@ class APIService {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization") // to get friends only posts
 
         // send the request
-        print("in getposts")
         let (data, _) = try await URLSession.shared.data(for: request)
-        print("in getposts2")
         do {
-            print(String(data: data, encoding: .utf8) ?? "Invalid UTF8")
+            //print(String(data: data, encoding: .utf8) ?? "Invalid UTF8")
             let posts = try JSONDecoder().decode([Post].self, from: data) // creats a list of posts
             print(posts)
             return posts
         } catch {
             throw APIError.decodingFailed
         }
-        
     }
+    
+    
 }

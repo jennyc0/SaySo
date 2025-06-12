@@ -14,6 +14,8 @@ struct ProfileView: View {
     var body: some View {
         VStack {
             Text("My Profile")
+            Text("Username: \(authViewModel.currentUser?.username ?? "")")
+            Text("Friend requests sent: \(authViewModel.currentUser?.friendRequestsSent ?? [""])")
             Button("Sign out") {
                 Task {
                     await authViewModel.signOut()

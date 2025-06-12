@@ -55,6 +55,7 @@ final class AuthViewModel: ObservableObject {
                         let friendsIds = try await APIService.shared.getFriends(field: "friends")
                         let friendReqSent = try await APIService.shared.getFriends(field: "friendRequestsSent")
                         let friendReqReceived = try await APIService.shared.getFriends(field: "friendRequestsReceived")
+                        
                         DispatchQueue.main.async {
                             self.currentUser = User(email: email, username: username, userId: userId, friends: friendsIds, friendRequestsSent: friendReqSent, friendRequestsReceived: friendReqReceived)
                             print("current user:\(self.currentUser?.id ?? "") ")

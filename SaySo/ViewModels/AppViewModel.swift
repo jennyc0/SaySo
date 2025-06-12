@@ -13,7 +13,7 @@ enum Tab: Hashable {
     case explore
     case friends
     case createPost
-    //case search
+    case notifications
     case profile
 }
 
@@ -33,6 +33,7 @@ final class AppViewModel: ObservableObject {
     init() {
         
     }
+    
     
     @MainActor
     func loadFriendsIfNeeded() async {
@@ -76,7 +77,25 @@ final class AppViewModel: ObservableObject {
         hasLoadedExplore = true
     }
     
+    func sendFriendRequest(to friendId: String) async -> User? {
+        do {
+            let updatedUser = try await APIService.shared.sendFriendRequest(to: friendId)
+            return updatedUser
+        } catch {
+            print("Failed to send friend request: \(error)")
+            return nil
+        }
+    }
     
+    func acceptFriendRequest(friendId: String) async -> User? {
+        do {
+            let updatedUser = try await APIService.shared.acceptFriendRequest(friendId: friendId)
+            return updatedUser
+        } catch {
+            print("Failed to accept friend request: \(error)")
+            return nil
+        }
+    }
     // userId passed from authViewModel.currentUser.userId
     func vote(postId: String, userId: String, voteYes: Bool) async -> Bool {
         do {
@@ -121,6 +140,40 @@ final class AppViewModel: ObservableObject {
         let usernameLower = username.lowercased()
         let exists = try await APIService.shared.usernameExists(usernameLower)
         return exists
+    }
+    
+    
+    func getFriendRequestsReceived(userId: String) async -> ([String], [User]) {
+        // get list of friendIds from backend
+        do {
+            let friendIds = try await APIService.shared.getFriends(field: "friendRequestsReceived")
+            
+            var users: [User] = []
+            for friendId in friendIds {
+                // convert each friendId into a user
+                let user = await getUser(userId: friendId)
+                if let user {
+                    users.append(user)
+                }
+            }
+            return (friendIds, users)
+        } catch {
+            print("failed to get friend requests received: \(error)")
+            return ([], [])
+            
+        }
+    }
+    
+    func getUser(userId: String) async -> User? {
+        do {
+            let user = try await APIService.shared.getUser(userId: userId)
+            return user
+
+        } catch {
+            print("Failed to get user: \(error)")
+            return nil
+        }
+            
     }
     
     func loadPost(postId: String) async -> Post? {

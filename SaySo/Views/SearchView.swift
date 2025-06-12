@@ -9,6 +9,7 @@ import SwiftUI
 
 struct SearchView: View {
     @EnvironmentObject var appViewModel: AppViewModel
+    @EnvironmentObject var authViewModel: AuthViewModel
 
     
     @State private var searchQuery: String = ""
@@ -21,6 +22,7 @@ struct SearchView: View {
                 TextField("Add friend by username", text: $searchQuery) {
                 }
                 .padding(.horizontal)
+                .padding(.bottom)
                 .textFieldStyle(.roundedBorder)
                 .autocorrectionDisabled(true)
                 .autocapitalization(.none)
@@ -30,7 +32,12 @@ struct SearchView: View {
                 .onSubmit {
                     Task {
                         // display username matches
-                        matchingUsers = await appViewModel.userSearchQuery(searchQuery)
+                        var results = await appViewModel.userSearchQuery(searchQuery)
+                        results = results.filter {
+                            $0.id != authViewModel.currentUser?.id // don't show own name if part of the results
+                        }
+
+                        matchingUsers = results
                         hitEnter = true
                     }
                     
@@ -44,8 +51,10 @@ struct SearchView: View {
                         .padding()
                     
                 } else {
-                    List(matchingUsers) { user in
+                    ForEach(matchingUsers) { user in
+                        
                         UserCardView(user: user)
+                            .padding(.horizontal)
                     }
                 }
                 Spacer()
@@ -59,35 +68,6 @@ struct SearchView: View {
 }
 
 
-struct UserCardView: View {
-    @EnvironmentObject var authViewModel: AuthViewModel // stores current user info
-
-    @State var user: User
-    var body: some View {
-        VStack {
-            HStack {
-                Image(systemName: "person.circle")
-                    .resizable()
-                    .frame(width: 44, height: 44)
-                Text("\(user.username)")
-                    .font(.headline)
-                Spacer()
-                
-                // existing friend, check mark symbol
-                if ((authViewModel.currentUser?.friends.contains(user.userId)) ?? false) {
-                    Image(systemName: "checkmark.circle")
-                } else if (authViewModel.currentUser?.friendRequestsSent.contains(user.userId) ?? false){
-                    // request sent, time sybol
-                    Image(systemName: "clock")
-                } else {
-                    // current user doesn't have them added, plus symbol
-                    Image(systemName: "plus.circle")
-                }
-                
-            }
-        }
-    }
-}
 #Preview {
     SearchView()
         .environmentObject(AppViewModel())
