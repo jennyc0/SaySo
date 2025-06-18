@@ -14,34 +14,38 @@ struct NotificationsView: View {
     @State var requestUsers: [User] = []
     
     var body: some View {
-        VStack(alignment: .leading){
-            Text("Notifications")
-                .font(.headline)
-                
-            ForEach(requestUsers) { user in
-                UserCardView(user: user)
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading){
+                    if requestUsers.count == 0 {
+                        Text("No friend requests.")
+                            .foregroundColor(.gray)
+                            .padding()
+                    } else {
+                        ForEach(requestUsers) { user in
+                            UserCardView(user: user)
+                        }
+                    }
+                }
+                .padding()
             }
-        }
-        .task {
-            
-            let (requestIds, requestUsers) = await appViewModel.getFriendRequestsReceived(userId: authViewModel.currentUser?.id ?? "")
-            // update current user's data member friendRequestsReceived
-            authViewModel.currentUser?.friendRequestsReceived = requestIds
-            self.requestUsers = requestUsers
-            
-        }
-        .refreshable {
-            Task {
+            .navigationTitle("Notifications")
+            .task {
                 let (requestIds, requestUsers) = await appViewModel.getFriendRequestsReceived(userId: authViewModel.currentUser?.id ?? "")
                 // update current user's data member friendRequestsReceived
                 authViewModel.currentUser?.friendRequestsReceived = requestIds
                 self.requestUsers = requestUsers
             }
-            
-            
+            .refreshable {
+                Task {
+                    let (requestIds, requestUsers) = await appViewModel.getFriendRequestsReceived(userId: authViewModel.currentUser?.id ?? "")
+                    // update current user's data member friendRequestsReceived
+                    authViewModel.currentUser?.friendRequestsReceived = requestIds
+                    self.requestUsers = requestUsers
+                }
+            }
         }
     }
-        
 }
 
 #Preview {
